@@ -6,30 +6,122 @@ public class TPMPlayerMove : MonoBehaviour
 {
 	CharacterController Controller;
 
-	private Rigidbody playerRb;
-
+	[Header ("Basic Variables")]
+	public LayerMask groundMask;
 	public float Speed;
-	public int gravity = 1;
 	public Transform Cam;
-	public float gravityModifier;
+	//public float jumpForce = 100.0f;
+	//public Vector3 jump;
 
-	bool isOnGround = true;
+	private Vector3 velocity;
+	private bool isGrounded;
+	private Rigidbody playerRb;
+	private bool isOnGround = true;
+
+	[Header("Gravity")]
+	public float gravity;
+	public float maxGravity;
+	public float gravityScale = 5;
+
+	private float currentGravity;
+	private Vector3 gravityDirection;
+	private Vector3 gravityMovement;
+	private float gravityModifier;
+	private float constantGravity = -30;
+
 	void Start()
 	{
 		playerRb = GetComponent<Rigidbody>();
 		Controller = GetComponent<CharacterController>();
 		Physics.gravity *= gravityModifier;
+		Cursor.visible = false;
+		Screen.lockCursor = true;
+		//jump = new Vector3(0.0f, 2.0f, 0.0f);
 	}
 
+	void Awake()
+    {
+		isGrounded = true;
+		gravityDirection = Vector3.down; // Gets gravity direction and sets it to down
+    }
 	void Update()
 	{
+		CalculateGravity();
+		Movement();
+		//Jump();
+		if (isGrounded == true)
+        {
+			Debug.Log("Grounded");
+        }
+		else
+        {
+			Debug.Log("Not grounded");
+        }
+		if (Input.GetKeyDown(KeyCode.Escape))
+        {
+			Cursor.visible = true;
+			Screen.lockCursor = false;
+        }
+		/*if (Input.GetKeyDown(KeyCode.Space))
+        {
+			Debug.Log("Space pressed");
+        }*/
+	}
+	
+	private bool IsGrounded()
+    {
+		return Controller.isGrounded;
+    } //Checks if player is touching ground
+
+	void OnCollisionStay()
+    {
+		isGrounded = true;
+    }
+
+	void OnCollisionLeave()
+    {
+		isGrounded = false;
+    }
+
+	private void CalculateGravity()
+    {
+		if (isGrounded)
+        {
+			currentGravity = constantGravity;
+        }
+		else
+        {
+			if (currentGravity > maxGravity)
+            {
+				currentGravity -= gravity * Time.deltaTime;
+            }
+        }
+
+		gravityMovement = gravityDirection * -currentGravity * Time.deltaTime;
+    }
+
+	private void OnCollisionEnter(Collision collision)
+	{
+		if (collision.gameObject.CompareTag("Ground"))
+		{
+			isOnGround = true;
+			Debug.Log("You are on ground");
+		}
+        else
+        {
+			isOnGround = false;
+        }
+	}
+
+	private void Movement()
+    {
 		float Horizontal = Input.GetAxis("Horizontal") * Speed * Time.deltaTime;
 		float Vertical = Input.GetAxis("Vertical") * Speed * Time.deltaTime;
 
 		Vector3 Movement = Cam.transform.right * Horizontal + Cam.transform.forward * Vertical;
 		Movement.y = 0f;
 
-		Controller.Move(Movement);
+		Controller.Move(Movement + gravityMovement);
 
 		if (Movement.magnitude != 0f && isOnGround == true)
 		{
@@ -44,16 +136,14 @@ public class TPMPlayerMove : MonoBehaviour
 		}
 	}
 
-	private void OnCollisionEnter(Collision collision)
-	{
-		if (collision.gameObject.CompareTag("Ground"))
+	//Removed from game
+	/*private void Jump() 
+    {
+		if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
 		{
-			isOnGround = true;
-			Debug.Log("You are on ground");
+			Debug.Log("Space pressed");
+			playerRb.AddForce(jump * jumpForce , ForceMode.Impulse);
+			isGrounded = false;
 		}
-        else
-        {
-			isOnGround = false;
-        }
-	}
+    }*/
 }
