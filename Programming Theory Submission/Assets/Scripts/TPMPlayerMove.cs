@@ -10,8 +10,6 @@ public class TPMPlayerMove : MonoBehaviour
 	public LayerMask groundMask;
 	public float Speed;
 	public Transform Cam;
-	//public float jumpForce = 100.0f;
-	//public Vector3 jump;
 
 	private Vector3 velocity;
 	private bool isGrounded;
